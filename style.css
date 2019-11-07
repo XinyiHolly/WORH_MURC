@@ -1,0 +1,598 @@
+
+#sidebar-col {
+    position: absolute;
+    bottom:0;
+    left:0;
+    height: calc(100% - 59px);
+    border-right-width: 2px;
+    border-bottom-width: 0px;
+    border-left-width: 0px;
+    border-top-width: 0px;
+    border-style: solid;
+    border-color:  #007bff;
+}
+
+#map-col {
+    position: absolute;
+    bottom:0;
+    right:0;
+    height: calc(100% - 59px);
+}
+
+#map {
+    position: absolute;
+    bottom:0;
+    right:0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    /*
+    width: calc(100% - 33%);
+    height: calc(100% - 59px);
+    */
+}
+
+
+
+/********* Styling of loading div *********/
+#loading-div {
+    display: none;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: calc(100% - 59px);
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.637);
+    z-index: 1000;
+}
+
+#percentGeocoded {
+    position: absolute;
+    top: calc(50% - 59px);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 1001;
+}
+
+
+/********* Styling of sidebar content *********/
+
+#content {
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+}
+
+#fileSelection-div {
+    display: none;
+    position: absolute;
+    top: calc(0%);
+    left: 0%;
+    height: calc(60%);
+    width: 100%;
+    background-color: rgb(255, 255, 255, 0.637);
+    z-index: 1000;
+}
+
+#singleAddressSelection-div {
+    display: none;
+    position: absolute;
+    top: calc(60%);
+    left: 0%;
+    height: calc(10%);
+    width: 100%;
+    background-color: rgb(255, 255, 255, 0.637);
+    z-index: 1000;
+}
+
+#address-container {
+    position: absolute;
+    top: 10%;
+    width: 90%;
+    height: 20%;
+    left: 0;
+    margin: auto 5%;
+}
+
+#addressInputText {
+    text-align: center;
+}
+
+#dragAndDrop-container {
+    position: absolute;
+    top: 35%;
+    width: 90%;
+    height: 20%;
+    left: 0;
+    margin: auto 5%;
+}
+
+#dragAndDropText {
+    text-align: center;
+}
+
+#dragMarker-container {
+    display: block;
+    margin: auto;
+    width: 25px;
+}
+
+#dragMarker {
+    /*display: block;
+    margin: auto;*/
+    z-index: 800;
+}
+
+
+#filePicker-container {
+    position: absolute;
+    top: 60%;
+    width: 90%;
+    height: 20%;
+    left: 0;
+    margin: auto 5%;
+}
+
+#filePickerText {
+    text-align: center;
+}
+
+.custom-file-label::after {
+    color: white;
+    background-color: #007bff;
+}
+
+#columnSelected-div {
+    display: none;
+    position: absolute;
+    top: 77%;
+    width: 90%;
+    height: 10%;
+    left: 0;
+    margin: auto 5%;
+    text-align: center;
+}
+
+#addressNotFound {
+    top: 20%;
+}
+
+.bottom-content {
+    display: none;
+    position: absolute;
+    top: 80%;
+    width: 90%;
+    height: 10%;
+    left: 0;
+    margin: auto 5%;
+    text-align: center;
+}
+
+
+
+/********* Styling of results content *********/
+
+#results-content {
+    display: none;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    z-index: 6; /* One more than content */
+}
+
+#success {
+    position: absolute;
+    top: 5%;
+    width: 90%;
+    left: 0;
+    margin: auto 5%;
+    text-align: center;
+}
+
+#numGeoCoded {
+    position: absolute;
+    top: 10%;
+    width: 90%;
+    left: 0;
+    margin: auto 5%;
+    text-align: center;
+}
+
+#resultsOverview {
+    position: absolute;
+    top: 20%;
+    width: 80%;
+    /* left: 0; */
+    margin: auto 5%;
+    text-align: left;
+    font-size: 1.1em;
+}
+
+#tableMapToggle {
+    position: absolute;
+    top: 69%;
+    width: 90%;
+    left: 0;
+    margin: auto 5%;
+}
+
+#exportText {
+    position: absolute;
+    top: 77%;
+    width: 90%;
+    left: 0;
+    margin: auto 5%;
+    text-align: center;
+}
+
+/* Snag the buttons made by DataTables and put them in the sidebar instead */
+.dt-buttons {
+    /*background-color: #007bff;*/
+    position: absolute;
+    top: 80%;
+    width: 90%;
+    left: 0;
+    margin: auto 5%;
+}
+
+.buttons-csv {
+    color: #fff !important;
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+.buttons-excel {
+    color: #fff !important;
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+.buttons-pdf {
+    color: #fff !important;
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+.buttons-print {
+    color: #fff !important;
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+}
+
+#startOverButt {
+    display: none;
+}
+
+.startOverButt {
+    position: absolute;
+    top: 90%;
+    width: 90%;
+    left: 0;
+    margin: auto 5%;
+}
+
+
+/********* Styling of tables *********/
+
+/* The table div holds the table with the results of the parsed csv file*/
+/* Later down the line, it will hold the results of geocoding the csv */
+/* The default display is none */
+#table-div {
+    display: none;
+    position: absolute;
+    bottom:0;
+    right:0;
+    width: 100%;
+    height: 100%;
+    background-color: white;
+    overflow: auto;
+    z-index: 6;
+}
+
+#csvLoaded-div {
+    display: none;
+    width: 98%;
+    margin: 1vh auto;
+    font-weight: 550;
+    color: #28a745;
+}
+
+#resultsTable_wrapper {
+    width: 98%;
+    margin: 1vh auto;
+}
+
+#csvTable_wrapper {
+    width: 98%;
+    margin: 1vh auto;
+}
+
+td.highlight {
+    background-color: rgb(210,210,210) !important;
+}
+
+.fa-info-circle {
+    color: #17a2b8;
+    z-index: 10;
+}
+
+/********* Styling of mobile content *********/
+@media screen and (max-width: 575px){
+    #sidebar-col {
+        display: none;
+    }
+
+    #collapseButton-mobile {
+        position: absolute;
+        bottom: 7%;
+        left: 50%;
+        transform: translate(-50%, 0%);
+        z-index: 8;
+    }
+}
+
+#mobile-content-container {
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    left: 0;
+    bottom: 0;
+    background-color: white;
+    text-align: center;
+    border-right-width: 0px;
+    border-bottom-width: 0px;
+    border-left-width: 0px;
+    border-top-width: 2px;
+    border-style: solid;
+    border-color:  #007bff;
+    z-index: 8;
+}
+
+#mobileHeader {
+    background-color: #007bff;
+}
+
+#mobile-content {
+    
+}
+
+#address-container-mobile {
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    left: 50%;
+    bottom: 40%;
+    transform: translate(-50%, 50%);
+    margin: auto;
+}
+
+#murcButton-container-single-mobile {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 15%;
+    transform: translate(-50%, 0%);
+}
+
+#addressNotFound-mobile {
+    display: none;
+    position: absolute;
+    width: 95%;
+    left: 50%;
+    bottom: 5%;
+    transform: translate(-50%, 0%);
+}
+
+#geocodeResults-mobile {
+    display: none;
+    position: absolute;
+    width: 95%;
+    height: 90%;
+    left: 50%;
+    bottom: 40%;
+    transform: translate(-50%, 50%);
+    margin: auto;
+}
+
+#startOverButt-mobile {
+    display: none;
+    position: absolute;
+    left: 50%;
+    bottom: 5%;
+    width: 90%;
+    transform: translate(-50%, 0%);
+}
+
+.drag {
+    opacity: 0.5;
+}
+.over {
+    background: red;
+}
+
+/********* Styling of popup (overwrites the styling in cartodb) *********/
+.leaflet-popup-tip-container {
+    width: 40px !important;
+    height: 20px !important;
+    position: absolute !important;
+    left: 50% !important;
+    margin-left: -20px !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
+/********* Styling legend *********/
+
+.legend-control-container {
+    background-color: white;
+    border: 1.5px solid black;
+    border-radius: 25px;
+    color: #555;
+    line-height: 0px;
+    cursor:pointer;
+}
+
+.legend-control-container h3 {
+    margin: 10px;
+    text-align: center;
+}
+
+.legendClickMe {
+    text-align: center;
+    margin: 5px;
+    margin-bottom: 10px;
+}
+
+.legendContent {
+    display: none;
+    line-height: 25px;
+    margin: 5px;
+}
+
+.legend-control-container i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+    border: 0.5px solid black;
+}
+
+/********* Styling modal (taken from SCOHeader) *********/
+
+#infoModal {
+	display: none;
+	position: absolute;
+	top: calc(85px + (100% - 85px) / 10);
+	left: 15%;
+	color: #08090A;
+	background-color: #F4F7F5;
+	width: 70%;
+	height: calc(8 * (100% - 85px) / 10);
+	z-index: 1003; 
+    padding:0.5%;
+    border-radius: 25px;
+}
+
+#infoModal h3 {
+	position: absolute;
+	top: 15px;
+	left: 15px;
+	margin: 0;
+	font-family: "Open Sans";
+	font-weight: 700;
+	font-size: 1.75em;
+	line-height: 1em;
+}
+#infoModal .fa-times {
+	position: absolute;
+	right: 15px;
+	top: 15px;
+}
+#infoModal .fa-times:hover {
+	cursor: pointer;
+}
+
+#modalBkgd {
+	display: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(8,9,10,0.7);
+	z-index: 1002; 
+}
+
+#modalContent {
+	margin-left: 15px;
+	margin-top: 60px;
+	max-width: calc(100% - 30px);
+	max-height: calc(100% - 75px);
+	overflow: auto;
+}
+
+#modalContent img {
+	width: calc(100% - 4px);
+	height: auto;
+	max-width: 288px;
+	margin: 10px 0;
+	float: left;
+	border: 2px solid #08090A;
+}
+#modalContent div {
+	position: relative;
+	width: 100%;
+	float: left;
+	clear: both;
+}
+#modalContent p {
+	margin: 0;
+	padding: 10px 0;
+	font-family: "Open Sans";
+	font-weight: 400;
+	font-size: 1em;
+}
+#modalContent strong {
+	margin: 0;
+	padding: 10px 0;
+	font-family: "Open Sans";
+	font-weight: 800;
+	font-size: 1em;
+}
+
+#modalContent p.help {
+	position: absolute;
+    top: 50%;
+    left: 302px;
+    transform: translateY(-50%);
+}
+#modalContent .inlineSelect {
+	margin-left: 25px;
+	font-family: "Open Sans";
+    font-weight: 700;
+    font-size: 1em;
+    line-height: 1em;
+}
+#modalContent .inlineSelect select {
+	border: none;
+    background-color: #F4F7F5;
+    font-size: 1.25em;
+    text-decoration: underline;
+    font-weight: 700;
+}
+#modalContent form {
+	font-family: "Open Sans";
+    font-weight: 400;
+    font-size: 1em;
+    line-height: 1em;
+}
+#modalContent a {
+	color: #0D3B66;
+	text-decoration: underline;
+}
+#modalContent a:hover {
+	cursor: pointer;
+}
+#modalContent form textarea {
+	width: calc(100% - 6px);
+	max-width: 500px;
+	font-family: "Open Sans";
+    font-weight: 400;
+    font-size: 1em;
+    line-height: 1em;
+}
+#modalContent form input[type="submit"] {
+	font-family: "Open Sans";
+	font-weight: 700;
+	padding: 0 10px 3px 10px;
+	background-color: #0D3B66;
+	color: #F4F7F5;
+	border: 2px solid #08090A;
+	border-radius: 15px;
+}
+#modalContent form input[type="submit"]:hover {
+	cursor: pointer;
+}
+
