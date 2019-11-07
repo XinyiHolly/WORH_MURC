@@ -31,9 +31,9 @@ var murcDefs = {
     "5c":"<25 miles from a population center; 10,000-49,999 residents and >250 residents per square mile",
     "6":"≥50,000 residents",
     // Class definitions for 3-class MURC
-    "R":"Rural - ≥25 miles from a population center and ≤9,999 residents",
-    "SU":"Small Urban - ≥25 miles from a population center and ≥10,000 residents or <25 miles from a population center and ≤9,999 residents",
-    "U":"Urban - <25 miles from a population center and ≥10,000 residents"
+    "R":"Rural: ≥25 miles from a population center and ≤9,999 residents",
+    "SU":"Small Urban: ≥25 miles from a population center and ≥10,000 residents or <25 miles from a population center and ≤9,999 residents",
+    "U":"Urban: <25 miles from a population center and ≥10,000 residents"
 }
 
 // Global object to count each time a MURC class is geocoded
@@ -66,6 +66,23 @@ var topoLayer;
 
 function createmap() {
 
+    // Update which title is used based on window width on load-in
+    if ($(window).width() < 875) {
+        $('.navbar-brand-title')[0].innerHTML = "MURC";
+        $('.the-actual-brand')[0].innerHTML = '<img id="logo" src="images/WI_ORH_Logo_Outline_Small.png" width="auto" height="40" alt="">';
+    }
+
+    // Create window event listener to switch to appropriate title based on window width on window resize
+    window.addEventListener("resize", (function() {
+        if ($(window).width() < 875) {
+            $('.navbar-brand-title')[0].innerHTML = "MURC";
+            $('.the-actual-brand')[0].innerHTML = '<img id="logo" src="images/WI_ORH_Logo_Outline_Small.png" width="auto" height="40" alt="">';
+        } else if ($(window).width() >= 875) {
+            $('.navbar-brand-title')[0].innerHTML = "Municipal Urban-Rural Classification";
+            $('.the-actual-brand')[0].innerHTML = '<img id="logo" src="images/WI_ORH_Logo_Outline.png" width="auto" height="40" alt="">';
+        }
+    }))
+
     /********** Create listener for clicking the "x" on an info link's content (E.g. Help, About, Contact, etc) *********/
     $('#infoModal .fa-times').on('click', function (e) {
         $('#infoModal').fadeOut(500);
@@ -95,8 +112,8 @@ function createmap() {
 
     //Stamen-toner basemap
 
-    // The stamen toner basemap without the labels
-    var Stamen_TonerBackground = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.{ext}', {
+    // The stamen toner lite version
+    var Stamen_TonerLite = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.{ext}', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         subdomains: 'abcd',
         minZoom: 0,
@@ -105,8 +122,30 @@ function createmap() {
     });
 
 
-    // The stamen toner labels and lines (roads)
-    var Stamen_TonerHybrid = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-hybrid/{z}/{x}/{y}{r}.{ext}', {
+    // The stamen toner basemap without the labels
+    var Stamen_TonerBackground = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.{ext}', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: 'abcd',
+        minZoom: 0,
+        maxZoom: 20,
+        ext: 'png',
+        opacity: 0.3
+    });
+
+    // The stamen toner lines (roads)
+    var Stamen_TonerLines = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lines/{z}/{x}/{y}{r}.{ext}', {
+        attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: 'abcd',
+        minZoom: 0,
+        maxZoom: 20,
+        ext: 'png',
+        // We add the labels to the shadow pane to ensure they are above the overlayPane of the MURC layer, but below the popup pane
+        pane: 'shadowPane',
+        opacity: 0.3
+    });
+
+    // The stamen toner labels
+    var Stamen_TonerLabels = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.{ext}', {
         attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         subdomains: 'abcd',
         minZoom: 0,
@@ -116,9 +155,51 @@ function createmap() {
         pane: 'shadowPane'
     });
 
+    // A big white rectangle that we can use to mask the background
+    var bigRectangle = {
+        "type": "Feature",
+        "properties": {
+            "name": "Big Rectangle"
+            // "pane": "shadowPane"
+            // "style": {
+            //     weight: 2,
+            //     color: "#999",
+            //     opacity: 1,
+            //     fillColor: "#B0DE5C",
+            //     fillOpacity: 0.8
+            // }
+            // "pane": "shadowPane"
+        },
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [[
+                [60,-70],
+                [30,-69.99],
+                [29.99,-109.99],
+                [59.99,-109.99],
+                [60,-70]
+            ]]
+        }
+    }
+    var bigRectangleStyle = {
+        "weight": 2,
+        "color": "#ffffff",
+        "opacity": 1,
+        "fillColor": "#fffff0",
+        "fillOpacity": 0.65
+        // "pane": "tilePane"
+    }
+
+    // L.latLng(60, -70),
+    // L.latLng(30, -110)
+
     // Add stamen toner tiles to the map
-    Stamen_TonerBackground.addTo(map);
-    Stamen_TonerHybrid.addTo(map);
+    Stamen_TonerLite.addTo(map);
+    // L.geoJSON(bigRectangle, {style: bigRectangleStyle}).addTo(map);
+    // Stamen_TonerBackground.addTo(map);
+    // Stamen_TonerLines.addTo(map);
+    Stamen_TonerLabels.addTo(map);
+    
 
     /*********  Load MURC data onto map: *********/
 
@@ -143,7 +224,7 @@ function createmap() {
     topoLayer = new L.TopoJSON();
 
     // Use AJAX to retrieve topo data for layer
-    $.getJSON('lib/geoData/MURC_Dec2016_Unprojected.topojson')
+    $.getJSON('lib/geoData/MURC_Dec2016_revised_Unprojected_Simplified_30_Percent.topojson')
         // When data retrieved, call addTopoData to add data to map
         .done(addTopoData);
 
@@ -154,17 +235,23 @@ function createmap() {
         // Add layer to the map
         topoLayer.addTo(map);
 
-        // Find the max attribute value for the layer
-        // topoLayer.eachLayer(findMinMax);
-
         // Color each layer according to attribute value
         // And add some event listeners to each layer
         topoLayer.eachLayer(handleLayer);
 
+        createLegend();
         // Create a legend for the map if the screen size is large enough
-        if ($(window).width() >= 768) {
-            createLegend();
+        if ($(window).width() < 768) {
+            $('.legend-control-container').hide();
         }
+        // Create window event listener to switch legend on/off depending on window width
+        window.addEventListener("resize", (function() {
+            if ($(window).width() < 768) {
+                $('.legend-control-container').hide();
+            } else if ($(window).width() >= 768) {
+                $('.legend-control-container').show();
+            }
+        }))
 
     }
 
@@ -173,14 +260,20 @@ function createmap() {
     /*********  Implement address input: *********/
 
     // Add on-click event to address input submit button
+    // $('#addressInput-form').submit(function(){
     $("#addressSubmit").on("click", function () {
 
+        // Prevent default form behavior
+        event.preventDefault();
 
         // Reset latLng
         latLng = undefined;
 
-        // Retrieve adrress from input
+        // Retrieve address from input
         var address = $('#addressInput')[0].value;
+
+        // Show loading screen while geocoding takes place
+        $('#loading-div').fadeIn(500);
 
 
         // For batch, we geocode after hitting calculate MURC, but for a single address it seems
@@ -195,18 +288,22 @@ function createmap() {
         // use jQuery to call the API and get the JSON results
         $.getJSON(geocode, function (data) {
 
+
             // Check that the results are not empty
             if (data.length) {
                 // Check that there is a result within WI
                 for (i = 0; i < data.length; i++) {
+                    console.log(data[i]);
                     var name = Papa.parse(data[i].display_name).data[0];
-                    if (name[(name.length - 3)].trim() == "Wisconsin") {
+                    console.log(name);
+                    if (name.length > 3 && name[(name.length - 3)].trim() == "Wisconsin") {
                         // If within Wisconsin, save the lat and lng of the address
                         latLng = L.latLng(data[i].lat, data[i].lon);
                         // Save the full geocoded address
+                        console.log(data[i].display_name);
                         address = data[i].display_name;
                         // Add the coordinates to the address
-                        address += " (" + data[i].lat + ", " + data[i].lon + ")";
+                        address += " <br>Latitude: " + data[i].lat + " <br>Longitude" + data[i].lon;
                         break;
                     }
                 }
@@ -216,33 +313,129 @@ function createmap() {
             if (latLng != undefined) {
                 // Remove address not found message
                 $('#addressNotFound').fadeOut(500);
-                // Have calculate MURC and start over button appear
-                if ($('#murcButton-container-single').css("display") == "none") {
-                    $('#murcButton-container-single').fadeIn(500);
-                    $('#startOverButt').fadeIn(500);
-                    // Fade in single address selection div to block out csv selection
-                    $('#singleAddressSelection-div').fadeIn(500);
-                }
-
-                // TODO: Check if marker has same latLng as existing marker?
 
                 // Add location marker to marker layer group
                 var marker = L.marker(latLng);
+                console.log(address);
                 marker.address = address;
                 markers.addLayer(marker);
 
                 // Add marker to map
                 markers.addTo(map);
 
+                // According to client request, instead of having calc murc button appear, immediately calculate the murc value instead
+                // calcMurcSingle();
+                $('#startOverButt').fadeIn(500);
+
+                // Fade in table div
+                $('#resultsTable').fadeIn(500);
+
+                // Append the header row to thead in preperation for the data
+                $('#resultsTable thead').append("<tr><th>Address</th><th>Latitude</th><th>Longitude</th><th>MURC <i id='murcInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification'></i> </th><th>MURC def <i id='murcDefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Definition of the Municipal Urban-Rural Classification'></i> </th><th>MURC3 <i id='murc3Info' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version'></i> </th><th>MURC3 def <i id='murc3DefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Definition of the Municipal Urban-Rural Classification 3-Class Version'></i> </th></tr>");
+
+                // Enable tooltips
+                $(function () {
+                    $('[data-toggle="tooltip"]').tooltip()
+                })
+
+                // Create variable to track number of successful geocodes
+                var succGeo = 0;
+
+                // Fade out the singleAddressSelection-div
+                $('#singleAddressSelection-div').fadeOut(500);
+
+                
+                // The lat and lng of the marker
+                var lat = marker.getLatLng().lat;
+                var lng = marker.getLatLng().lng;
+
+                // Check if the marker is in a topoLayer polygon
+                var res = leafletPip.pointInLayer(marker.getLatLng(), topoLayer);
+
+                // If result has a length value, then the point was in one of the polygons
+                if (res.length) {
+                    // Add popup content using the MURC values
+                    var popupContent = "<b>Address:</b><br>" + address + "<br><br><b>MURC:</b><br>" + res[0].feature.properties.MURC_Class + ": " + murcDefs[res[0].feature.properties.MURC_Class] + "<br><br><b>MURC 3-Class Version:</b><br>" + murcDefs[res[0].feature.properties.MURC_3clas];
+                    var popup = L.popup({
+                        autoPan: false
+                    }).setContent(popupContent);
+                    marker.bindPopup(popup);
+
+                    // Create a table row entry with the MURC value
+                    var tableRow = "<tr><td>" + address.split("Latitude")[0].trim() + "</td><td>" + lat + "</td><td>" + lng + "</td><td>" + res[0].feature.properties.MURC_Class + "</td><td>" +  murcDefs[res[0].feature.properties.MURC_Class] + "</td><td>" + res[0].feature.properties.MURC_3clas + "</td><td>" + murcDefs[res[0].feature.properties.MURC_3clas] + "</td></tr>"
+                    // Add it to the results table
+                    $('#resultsTable tbody').append(tableRow);
+
+                    // Increment successful geo
+                    succGeo++;
+
+                    // Increment the class counter
+                    classCounter[res[0].feature.properties.MURC_Class]++;
+                    classCounter[res[0].feature.properties.MURC_3clas]++;
+
+                } else {
+                    // If in WI, but not within our MURC polygons, remove the marker
+                    map.removeLayer(marker);
+                }
+                
+
+                // Finish creating the data table view
+                var table = $('#resultsTable').DataTable({
+                    // "scrollY": "100%",
+                    // "scrollX": "100%",
+                    //destroy: true,
+                    dom: 'Bfrtip',
+                    buttons: [
+                        { extend: 'csvHtml5', title: 'MURC Report' }, { extend: 'excelHtml5', title: 'MURC Report' }, { extend: 'pdfHtml5', title: 'MURC Report' }
+                    ]
+                });
+                resultsTableCreated = true;
+
+                // Check if we should print success or failure(if we geocoded anything)
+                if (succGeo == 0) {
+                    $('#success')[0].innerHTML = 'Failure';
+                } else {
+                    $('#success')[0].innerHTML = 'Success!';
+                }
+
+                // Update the number of successful geocodes in the results-content (this is actually the number of records we successfully found MURC values for)
+                $('#numGeoCoded')[0].innerHTML = succGeo + ' out of 1 addresses found';
+
+                // Snag the buttons made by DataTables and put them in the sidebar instead
+                $('.dt-buttons').appendTo('#results-content');
+
+                // Check if there was only a single address geocoded (i.e., only one marker on the map)
+                if(succGeo == 1){
+                    // If only a single address was reverse geocoded, print overview information for that point
+                    console.log(marker.getPopup().getContent());
+                    $('#resultsOverview')[0].innerHTML = marker.getPopup().getContent();
+                }else{
+                    // If the geocode was unsuccessful, do not print anything
+                    $('#resultsOverview')[0].innerHTML = "";
+                }
+
+                // Remove the loading screen
+                $('#loading-div').fadeOut(500);
+
+                // Switch to results view
+                $('#content').fadeOut(500);
+                $('#results-content').fadeIn(500);
+                // set map view
+                // Reset table/map toggle
+                if($('#tableButtLabel').hasClass('active')){
+                    $('#tableButtLabel').removeClass('active');
+                    $('#mapButtLabel').addClass('active');
+                }
+                //$('#table-div').fadeIn(500);
+                $('#resultsTable').fadeIn(500);
+
             } else {
-                // Else if we did find find an address in WI
-                // Remove calculate MURC button
-                //$('#murcButton-container-single').fadeOut(500);
                 // If it is empty, have a message pop up instead
+                $('#loading-div').fadeOut(500);
                 $('#addressNotFound').fadeIn(500);
             }
 
-        });
+        }); // End getJSON
 
     });
 
@@ -288,49 +481,150 @@ function createmap() {
                 of: "#dragMarker-container"
             });
 
-            // Fade in calc murc button if we've actually added a marker to the map
-            if (markers.getLayers().length > 0) {
-                // Have calculate MURC button appear
-                if ($('#murcButton-container-single').css("display") == "none") {
-                    $('#murcButton-container-single').fadeIn(500);
-                    $('#startOverButt').fadeIn(500);
-                }
+            if(markers.getLayers().length > 0){
+
+                var marker = markers.getLayers()[0];
+                var lat = marker.getLatLng().lat;
+                var lng = marker.getLatLng().lng;
+
+                // According to client request, instead of having calc murc button appear, immediately calculate the murc value instead
+                // calcMurcSingle();
+                $('#startOverButt').fadeIn(500);
+
+                // Show loading screen while geocoding takes place
+                $('#loading-div').fadeIn(500);
+
+                // Fade in table div
+                //$('#table-div').fadeIn(500);
+                $('#resultsTable').fadeIn(500);
+
+                // Append the header row to thead in preperation for the data
+                $('#resultsTable thead').append("<tr><th>Address</th><th>Latitude</th><th>Longitude</th><th>MURC <i id='murcInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification'></i> </th><th>MURC def <i id='murcDefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Definition of the Municipal Urban-Rural Classification'></i> </th><th>MURC3 <i id='murc3Info' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version'></i> </th><th>MURC3 def <i id='murc3DefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Definition of the Municipal Urban-Rural Classification 3-Class Version'></i> </th></tr>");
+
+                // Enable tooltips
+                $(function () {
+                    $('[data-toggle="tooltip"]').tooltip()
+                })
+
+                // Create variables to track number of successful geocodes and track marker properties
+                var succGeo = 0;
+
+                // Fade out the singleAddressSelection-div
+                $('#singleAddressSelection-div').fadeOut(500);
+
+                // Create the reverse geocode url using lat and lng
+                var reverseGeocodeURL = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng;
+
+                // Use jQuery to call the API and get the JSON results
+                $.getJSON(reverseGeocodeURL, function (data) {
+
+                    // Check that the results are not empty
+                    if (data.display_name) {
+                        // Set address to the reverse geocoded address
+                        address = data.display_name;
+                        // Check that the resulting address is within WI
+                        var name = Papa.parse(address);
+                        for (i = 0; i < name.data[0].length; i++) {
+                            if (name.data[0][i].trim() == "Wisconsin") {
+                                // Set inWI to true if marker is within WI
+                                inWI = true;
+                                break;
+                            }
+                        }
+                        // If in Wisconsin
+                        if (inWI) {
+
+                            // Check if the marker is in a topoLayer polygon
+                            var res = leafletPip.pointInLayer(marker.getLatLng(), topoLayer);
+
+                            // If result has a length value, then the point was in one of the polygons
+                            if (res.length) {
+                                // Add the coordinates to the address
+                                address += "<br>Latitude: " + lat + "<br>Longitude: " + lng;
+                                // Add popup content using the MURC values
+                                var popupContent = "<b>Address:</b><br>" + address + "<br><br><b>MURC:</b><br>" + res[0].feature.properties.MURC_Class + ": " + murcDefs[res[0].feature.properties.MURC_Class] + "<br><br><b>MURC 3-Class Version:</b><br>" + murcDefs[res[0].feature.properties.MURC_3clas];
+                                var popup = L.popup({
+                                    autoPan: false
+                                }).setContent(popupContent);
+                                marker.bindPopup(popup);
+
+                                // Create a table row entry with the MURC value
+                                var tableRow = "<tr><td>" + address.split("Latitude")[0].trim() + "</td><td>" + lat + "</td><td>" + lng + "</td><td>" + res[0].feature.properties.MURC_Class + "</td><td>" +  murcDefs[res[0].feature.properties.MURC_Class] + "</td><td>" + res[0].feature.properties.MURC_3clas + "</td><td>" + murcDefs[res[0].feature.properties.MURC_3clas] + "</td></tr>"
+                                // Add it to the results table
+                                $('#resultsTable tbody').append(tableRow);
+
+                                // Increment successful geo
+                                succGeo++;
+
+                                // Increment the class counter
+                                classCounter[res[0].feature.properties.MURC_Class]++;
+                                classCounter[res[0].feature.properties.MURC_3clas]++;
+
+                            } else {
+                                // If in WI, but not within our MURC polygons, remove the marker
+                                map.removeLayer(marker);
+                            }
+                        } else {
+                            // If not in WI, remove the marker
+                            map.removeLayer(marker);
+                        }
+                    }
+
+                }).done(function () {
+                    // Once we finish the reverse geocoding for this address
+
+                    // Finish creating the data table view
+                    var table = $('#resultsTable').DataTable({
+                        // "scrollY": "100%",
+                        // "scrollX": "100%",
+                        //destroy: true,
+                        dom: 'Bfrtip',
+                        buttons: [
+                            { extend: 'csvHtml5', title: 'MURC Report' }, { extend: 'excelHtml5', title: 'MURC Report' }, { extend: 'pdfHtml5', title: 'MURC Report' }
+                        ]
+                    });
+                    resultsTableCreated = true;
+
+                    // Check if we should print success or failure(if we geocoded anything)
+                    if (succGeo == 0) {
+                        $('#success')[0].innerHTML = 'Failure';
+                    } else {
+                        $('#success')[0].innerHTML = 'Success!';
+                    }
+
+                    // Update the number of successful geocodes in the results-content (this is actually the number of records we successfully found MURC values for)
+                    $('#numGeoCoded')[0].innerHTML = succGeo + ' out of 1 addresses found';
+
+                    // Snag the buttons made by DataTables and put them in the sidebar instead
+                    $('.dt-buttons').appendTo('#results-content');
+
+                    // Check if there was only a single address geocoded (i.e., only one marker on the map)
+                    if(succGeo == 1){
+                        // Print overview information for that point
+                        console.log(marker.getPopup().getContent());
+                        $('#resultsOverview')[0].innerHTML = marker.getPopup().getContent();
+                    }else{
+                        $('#resultsOverview')[0].innerHTML = "";
+                    }
+
+                    // Remove the loading screen
+                    $('#loading-div').fadeOut(500);
+
+                    // Switch to results view
+                    $('#content').fadeOut(500);
+                    $('#results-content').fadeIn(500);
+                    // set map view
+                    // Reset table/map toggle
+                    if($('#tableButtLabel').hasClass('active')){
+                        $('#tableButtLabel').removeClass('active');
+                        $('#mapButtLabel').addClass('active');
+                    }
+                    //$('#table-div').fadeIn(500);
+                    $('#resultsTable').fadeIn(500);
+
+                });
             }
 
-        }
-    });
-
-    /*********  Implement calculate MURC for single-input addresses *********/
-
-    // When the single address calculate MURC button is clicked
-    $('#calcMurcButtSingle').on("click", function () {
-
-
-        // Show loading screen while geocoding takes place
-        $('#loading-div').fadeIn(500);
-
-        // Fade in table div
-        //$('#table-div').fadeIn(500);
-        $('#resultsTable').fadeIn(500);
-
-        // Append the header row to thead in preperation for the data
-        $('#resultsTable thead').append("<tr><th>Address</th><th>MURC <i id='murcInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification'></i> </th><th>MURC def<i id='murcDefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Definition of the Municipal Urban-Rural Classification'></i> </th><th>MURC3 <i id='murc3Info' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version'></i> </th><th>MURC3 def<i id='murc3DefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Definition of the Municipal Urban-Rural Classification 3-Class Version'></i> </th></tr>");
-
-        // Create variables to track number of successful geocodes and track marker properties
-        var succGeo = 0;
-        var markerIndex = 0;
-        //var addressInputMarkersIndex = 0;
-        //var addressInputMarkersArray = addressInputMarkers.getLayers();
-        var markersArray = markers.getLayers();
-        var numMarkers = markersArray.length; //+ addressInputMarkersArray.length;
-
-        // Fade out the singleAddressSelection-div
-        $('#singleAddressSelection-div').fadeOut(500);
-
-        // Process markers
-        if (numMarkers != 0) {
-            // If there are markers, call reverseGeocode
-            reverseGeocode(markerIndex, numMarkers, markersArray, succGeo);
         }
     });
 
@@ -364,7 +658,6 @@ function createmap() {
             // Remove calc button
             $('#murcButton-container-single').fadeOut(500);
 
-
             // Clear any pre-existing csvTable
             if (csvTableCreated) {
                 $('#csvTable').DataTable().destroy();
@@ -382,7 +675,7 @@ function createmap() {
             otherVals = [];
 
             // Remove content to our column selection text div
-            $('#csvLoaded-div').text("CSV Loaded!"+"\n"+"Please click on an example address in the table.");
+            $('#csvLoaded-div').text("CSV Loaded!"+"<br>"+"Please click on an example address in the table.");
 
             // Fade in start over button
             $('#startOverButt').fadeIn(500);
@@ -440,7 +733,10 @@ function createmap() {
                 },
                 complete: function () {
 
+                    
                     var table = $('#csvTable').DataTable({
+                        // "scrollY": "100%"
+                        // "scrollX": "100%"
                     });
                     csvTableCreated = true;
 
@@ -536,9 +832,13 @@ function createmap() {
         for (i = 0; i < uploadedCsvData.length; i++){
             headerRow += "<th>"+uploadedCsvData[i][0]+"</th>"
         }
-        headerRow += "<th>Geocoded Address</th><th>MURC <i id='murcInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification'></i> </th><th>MURC def<i id='murcDefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification Definition'></i> </th><th>MURC3 <i id='murc3Info' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version'></i> </th><th>MURC3 def<i id='murc3DefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version Definition'></i> </th></tr>";
+        headerRow += "<th>Geocoded Address</th><th>Latitude</th><th>Longitude</th><th>MURC <i id='murcInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification'></i> </th><th>MURC def <i id='murcDefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification Definition'></i> </th><th>MURC3 <i id='murc3Info' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version'></i> </th><th>MURC3 def <i id='murc3DefInfo' class='fas fa-info-circle' data-toggle='tooltip' data-placement='top' title='Municipal Urban-Rural Classification 3-Class Version Definition'></i> </th></tr>";
         $('#resultsTable thead').append(headerRow);
 
+        // Enable tooltips
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
 
         // Use recursion to geocode all addresses (this implementation only calls to geocode the next address after completing the current address)
         geoCode(addressIndex, numAddresses, succGeo);
@@ -640,7 +940,7 @@ function createmap() {
         }
 
         // Clear resultsOverview
-        $('#resultsOverview')[0].innerHTML = "No Summary Available";
+        // $('#resultsOverview')[0].innerHTML = "No Summary Available";
 
         // Reset views
         $('#resultsTable').fadeOut(500);
@@ -654,7 +954,7 @@ function createmap() {
         $('#fileSelection-div').fadeOut(500);
         $('#csvLoaded-div').fadeOut(500);
         $('#columnSelected-div').fadeOut(500);
-        // $('#singleAddressSelection-div').fadeOut(500);
+        $('#singleAddressSelection-div').fadeOut(500);
         $('#startOverButt').fadeOut(500);
 
 
@@ -710,7 +1010,7 @@ function createmap() {
                     var name = Papa.parse(data[i].display_name).data[0];
                     if (name[(name.length - 3)].trim() == "Wisconsin") {
                         latLng = L.latLng(data[i].lat, data[i].lon);
-                        addresses.push(data[i].display_name + " (" + data[i].lat + ", " + data[i].lon + ")");
+                        addresses.push(data[i].display_name + "<br>Latitude: " + data[i].lat + "<br>Longitude: " + data[i].lon);
                         break;
                     }
                 }
@@ -758,7 +1058,7 @@ function createmap() {
         // If result has a length value, then the point was in one of the polygons
         if (res.length) {
             // Add popup content to marker
-            var popupContent = "<b>Address:</b> " + addresses[0] + "<br><b>MURC:</b> " + res[0].feature.properties.MURC_Class + '<br><b>MURC3:</b> ' + res[0].feature.properties.MURC_3clas;
+            var popupContent = "<b>Address:</b> " + addresses[0] + "<br><br><b>MURC:</b><br>" + res[0].feature.properties.MURC_Class + ": " + murcDefs[res[0].feature.properties.MURC_Class] + "<br><br><b>MURC 3-Class Version:</b><br>" + murcDefs[res[0].feature.properties.MURC_3clas];
             var popup = L.popup({
                 autoPan: false
             }).setContent(popupContent);
@@ -809,19 +1109,19 @@ function createmap() {
 
 // Function to find the min and max values of an attribute
 // TODO: Alter to find min and max MURC attribute values
-function findMinMax(layer) {
-    if (maxAttributeValue === undefined) {
-        maxAttributeValue = layer.feature.properties.FEAT_ID;
-    } else if (layer.feature.properties.FEAT_ID > maxAttributeValue) {
-        maxAttributeValue = layer.feature.properties.FEAT_ID;
-    }
+// function findMinMax(layer) {
+//     if (maxAttributeValue === undefined) {
+//         maxAttributeValue = layer.feature.properties.FEAT_ID;
+//     } else if (layer.feature.properties.FEAT_ID > maxAttributeValue) {
+//         maxAttributeValue = layer.feature.properties.FEAT_ID;
+//     }
 
-    if (minAttributeValue === undefined) {
-        minAttributeValue = layer.feature.properties.FEAT_ID;
-    } else if (layer.feature.properties.FEAT_ID < minAttributeValue) {
-        minAttributeValue = layer.feature.properties.FEAT_ID;
-    }
-}
+//     if (minAttributeValue === undefined) {
+//         minAttributeValue = layer.feature.properties.FEAT_ID;
+//     } else if (layer.feature.properties.FEAT_ID < minAttributeValue) {
+//         minAttributeValue = layer.feature.properties.FEAT_ID;
+//     }
+// }
 
 // A function to return the correct color fill for the choropleth map based on the passed in value
 function getColor(d) {
@@ -860,7 +1160,7 @@ function handleLayer(layer) {
     });
 
     // Set popup for each layer
-    var popupContent = "<b>MURC:</b> " + layer.feature.properties.MURC_Class + "<br><b>MURC3:</b> " + layer.feature.properties.MURC_3clas;
+    var popupContent = "<br><br><b>MURC:</b><br>" + layer.feature.properties.MURC_Class + ": " + murcDefs[layer.feature.properties.MURC_Class] + "<br><br><b>MURC 3-Class Version:</b><br>" + murcDefs[layer.feature.properties.MURC_3clas];
     var popup = L.popup({
         autoPan: false
     })
@@ -900,7 +1200,7 @@ function leaveLayer() {
 function createLegend() {
     // Create legend as a leaflet control extension
     var LegendControl = L.Control.extend({
-        options: { position: 'bottomright' },
+        options: { position: 'topleft' },
         onAdd: function () {
             var container = L.DomUtil.create('div', 'legend-control-container');
             L.DomEvent.disableClickPropagation(container);
@@ -987,173 +1287,6 @@ function createLegend() {
 }
 
 
-// A recursive function to reverse geocode and find the MURC value of each map marker in WI
-function reverseGeocode(markerIndex, numMarkers, markersArray, succGeo) {
-
-    // Get the current marker using the marker index
-    var marker = markersArray[markerIndex];
-    // A boolean to track if this marker is within Wisconsin
-    var inWI = false;
-    // Placeholder for marker's reverse geocoded address
-    var address = "";
-    // The lat and lng of the marker
-    var lat = marker.getLatLng().lat;
-    var lng = marker.getLatLng().lng;
-
-
-    // Create the reverse geocode url using lat and lng
-    var reverseGeocodeURL = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=' + lat + '&lon=' + lng;
-
-    // Use jQuery to call the API and get the JSON results
-    $.getJSON(reverseGeocodeURL, function (data) {
-
-        // Check that the results are not empty
-        if (data.display_name) {
-            // Set address to the reverse geocoded address
-            address = data.display_name;
-            // Check that the resulting address is within WI
-            var name = Papa.parse(address);
-            for (i = 0; i < name.data[0].length; i++) {
-                if (name.data[0][i].trim() == "Wisconsin") {
-                    // Set inWI to true if marker is within WI
-                    inWI = true;
-                    break;
-                }
-            }
-            // If in Wisconsin
-            if (inWI) {
-
-                // Check if the marker is in a topoLayer polygon
-                var res = leafletPip.pointInLayer(marker.getLatLng(), topoLayer);
-
-                // If result has a length value, then the point was in one of the polygons
-                if (res.length) {
-                    // Add the coordinates to the address
-                    address += " (" + lat + ", " + lng + ")";
-                    // Add popup content using the MURC values
-                    var popupContent = "<b>Address:</b><br>" + address + "<br><br><b>MURC:</b><br>" + res[0].feature.properties.MURC_Class + ": " + murcDefs[res[0].feature.properties.MURC_Class] + "<br><br><b>MURC 3-Class Version:</b><br>" + res[0].feature.properties.MURC_3clas + ": " + murcDefs[res[0].feature.properties.MURC_3clas];
-                    var popup = L.popup({
-                        autoPan: false
-                    }).setContent(popupContent);
-                    marker.bindPopup(popup);
-
-                    // Create a table row entry with the MURC value
-                    var tableRow = "<tr><td>" + address + "</td><td>" + res[0].feature.properties.MURC_Class + "</td><td>" +  murcDefs[res[0].feature.properties.MURC_Class] + "</td><td>" + res[0].feature.properties.MURC_3clas + "</td><td>" + murcDefs[res[0].feature.properties.MURC_3clas] + "</td></tr>"
-                    // Add it to the results table
-                    $('#resultsTable tbody').append(tableRow);
-
-                    // Increment successful geo
-                    succGeo++;
-
-                    // Increment the class counter
-                    classCounter[res[0].feature.properties.MURC_Class]++;
-                    classCounter[res[0].feature.properties.MURC_3clas]++;
-
-                } else {
-                    // If in WI, but not within our MURC polygons, remove the marker
-                    map.removeLayer(marker);
-                }
-            } else {
-                // If not in WI, remove the marker
-                map.removeLayer(marker);
-            }
-        }
-
-    }).done(function () {
-        // Once we finish the reverse geocoding for this address
-
-        // Check if this was the last marker
-        if (markerIndex == (numMarkers - 1)) {
-
-            // If it was, finish creating the data table view
-            var table = $('#resultsTable').DataTable({
-                //destroy: true,
-                dom: 'Bfrtip',
-                buttons: [
-                    { extend: 'csvHtml5', title: 'MURC Report' }, { extend: 'excelHtml5', title: 'MURC Report' }, { extend: 'pdfHtml5', title: 'MURC Report' }
-                ]
-            });
-            resultsTableCreated = true;
-
-            // Check if we should print success or failure(if we geocoded anything)
-            if (succGeo == 0) {
-                $('#success')[0].innerHTML = 'Failure';
-            } else {
-                $('#success')[0].innerHTML = 'Success!';
-            }
-
-            // Update the number of successful geocodes in the results-content (this is actually the number of records we successfully found MURC values for)
-            $('#numGeoCoded')[0].innerHTML = succGeo + ' out of ' + numMarkers + ' records geocoded';
-
-            // Snag the buttons made by DataTables and put them in the sidebar instead
-            $('.dt-buttons').appendTo('#results-content');
-
-            // Check if there was only a single address geocoded (i.e., only one marker on the map)
-            if(succGeo == 1){
-                // If only a single address was reverse geocoded, print overview information for that point
-                $('#resultsOverview')[0].innerHTML = marker.getPopup().getContent();
-            }else if (succGeo > 1){
-                // If there were multiple points
-                // Find most common MURC and MURC3
-                var commonMurcClass;
-                var commonMurc3Class;
-                var commonMurcClassCount = 0;
-                var commonMurc3ClassCount = 0;
-                // For each class
-                for (key in classCounter){
-                    // If it's a MURC3 class
-                    if(key == "R" || key == "SU" || key == "U"){
-                        if(classCounter[key] > commonMurc3ClassCount){
-                            commonMurc3ClassCount = classCounter[key];
-                            commonMurc3Class = key;
-                        }
-                    // If it's a MURC class
-                    }else{
-                        if(classCounter[key] > commonMurcClassCount){
-                            commonMurcClassCount = classCounter[key];
-                            commonMurcClass = key;
-                        }
-                    }
-                }
-                // Print summary overview for all points
-                $('#resultsOverview')[0].innerHTML = "<b>Summary statistics for addresses geocoded:</b><br><br><br><b>Most Common MURC Value:</b><br>" + commonMurcClass + ": " + murcDefs[commonMurcClass] + "<br><br><b>Most Common MURC 3-Class Value:</b><br>" + commonMurc3Class + ": " + murcDefs[commonMurc3Class];
-            }
-
-            // Remove the loading screen
-            $('#loading-div').fadeOut(500);
-
-            // Switch to results view
-            $('#content').fadeOut(500);
-            $('#results-content').fadeIn(500);
-            // set map view
-            // Reset table/map toggle
-            if($('#tableButtLabel').hasClass('active')){
-                $('#tableButtLabel').removeClass('active');
-                $('#mapButtLabel').addClass('active');
-            }
-            //$('#table-div').fadeIn(500);
-            $('#resultsTable').fadeIn(500);
-
-        } else {
-            // If this was not the last marker
-
-            // Increment markerIndex
-            markerIndex++;
-
-            // Calculate our progress
-            var percentComplete = Math.round(((markerIndex) / numMarkers) * 100);
-
-            // Update our precentage on the loading div
-            $('#percentGeocoded')[0].innerHTML = percentComplete + '% Complete';
-
-            // Call reverse geocode on the next marker
-            reverseGeocode(markerIndex, numMarkers, markersArray, succGeo);
-        }
-    });
-
-} // End reverseGeocode()
-
-
 // A recursive function to geocode and find the MURC value of each address in WI
 function geoCode(addressIndex, numAddresses, succGeo) {
 
@@ -1172,6 +1305,7 @@ function geoCode(addressIndex, numAddresses, succGeo) {
 
         // Check that the results are not empty
         if (data.length) {
+            console.log(data);
             // Check that there is a result within WI, and take the first valid result
             for (i = 0; i < data.length; i++) {
                 var name = Papa.parse(data[i].display_name).data[0];
@@ -1180,7 +1314,7 @@ function geoCode(addressIndex, numAddresses, succGeo) {
                     // Replace address with the full address that resulted from geocoding
                     address = data[i].display_name;
                     // Add the coordinates to the address
-                    address += " (" + data[i].lat + ", " + data[i].lon + ")";
+                    address += "<br>Latitude: " + data[i].lat + "<br>Longitude: " + data[i].lon;
                     break;
                 }
             }
@@ -1200,14 +1334,14 @@ function geoCode(addressIndex, numAddresses, succGeo) {
                     tableRow += "<td>" + uploadedCsvData[i][addressIndex] + "</td>";
                 }
                 // Add in the geocoded address and MURC values and definitions
-                tableRow += "<td>" + address + "</td><td>" + res[0].feature.properties.MURC_Class + "</td><td>" +  murcDefs[res[0].feature.properties.MURC_Class] + "</td><td>" + res[0].feature.properties.MURC_3clas + "</td><td>" + murcDefs[res[0].feature.properties.MURC_3clas] + "</td></tr>";
+                tableRow += "<td>" + address.split("Latitude")[0] + "</td><td>" + latLng.lat + "</td><td>" + latLng.lng + "</td><td>" + res[0].feature.properties.MURC_Class + "</td><td>" +  murcDefs[res[0].feature.properties.MURC_Class] + "</td><td>" + res[0].feature.properties.MURC_3clas + "</td><td>" + murcDefs[res[0].feature.properties.MURC_3clas] + "</td></tr>";
                 // Add it to the results table
                 $('#resultsTable tbody').append(tableRow);
 
                 // Add location marker to marker layer group
                 var marker = L.marker(latLng);
                 markers.addLayer(marker);
-                var popupContent = "<b>Address:</b><br>" + address + "<br><br><b>MURC:</b><br>" + res[0].feature.properties.MURC_Class + ": "+murcDefs[res[0].feature.properties.MURC_Class]+"<br><br><b>MURC 3-Class Version:</b><br>" + res[0].feature.properties.MURC_3clas + ": " + murcDefs[res[0].feature.properties.MURC_3clas];
+                var popupContent = "<b>Address:</b><br>" + address + "<br><br><b>MURC:</b><br>" + res[0].feature.properties.MURC_Class + ": "+murcDefs[res[0].feature.properties.MURC_Class]+"<br><br><b>MURC 3-Class Version:</b><br>" + murcDefs[res[0].feature.properties.MURC_3clas];
                 var popup = L.popup({
                     autoPan: false
                 }).setContent(popupContent);
@@ -1230,6 +1364,8 @@ function geoCode(addressIndex, numAddresses, succGeo) {
 
             // If it was, finish creating the data table view
             var table = $('#resultsTable').DataTable({
+                // "scrollY": "100%",
+                // "scrollX": "100%",
                 dom: 'Bfrtip',
                 buttons: [
                     { extend: 'csvHtml5', title: 'MURC Report' }, { extend: 'excelHtml5', title: 'MURC Report' }, { extend: 'pdfHtml5', title: 'MURC Report' }
@@ -1248,7 +1384,7 @@ function geoCode(addressIndex, numAddresses, succGeo) {
             markers.addTo(map);
 
             // Update the number of successful geocodes in the results-content
-            $('#numGeoCoded')[0].innerHTML = succGeo + ' out of ' + (numAddresses-1) + ' records geocoded';
+            $('#numGeoCoded')[0].innerHTML = succGeo + ' out of ' + (numAddresses-1) + ' addresses found';
 
             // Snag the buttons made by DataTables and put them in the sidebar instead
             $('.dt-buttons').appendTo('#results-content');
@@ -1257,29 +1393,8 @@ function geoCode(addressIndex, numAddresses, succGeo) {
             if(succGeo == 1){
                 // If only a single address was reverse geocoded, print overview information for that point
                 $('#resultsOverview')[0].innerHTML = markers.getLayers()[0].getPopup().getContent();
-            }else if (succGeo > 1){
-                // If there were multiple points
-                // Find most common MURC and MURC3
-                var commonMurcClass;
-                var commonMurc3Class;
-                var commonMurcClassCount = 0;
-                var commonMurc3ClassCount = 0;
-                // For each class
-                for (key in classCounter){
-                    // If it's a MURC3 class
-                    if(key == "R" || key == "SU" || key == "U"){
-                        if(classCounter[key] > commonMurc3ClassCount){
-                            commonMurc3Class = key;
-                        }
-                    // If it's a MURC class
-                    }else{
-                        if(classCounter[key] > commonMurcClassCount){
-                            commonMurcClass = key;
-                        }
-                    }
-                }
-                // Print summary overview for all points
-                $('#resultsOverview')[0].innerHTML = "<b>Summary statistics for addresses geocoded:</b><br><br><br><b>Most Common MURC Value:</b><br>" + commonMurcClass + ": " + murcDefs[commonMurcClass] + "<br><br><b>Most Common MURC 3-Class Value:</b><br>" + commonMurc3Class + ": " + murcDefs[commonMurc3Class];
+            }else{
+                $('#resultsOverview')[0].innerHTML = "";
             }
 
             // Remove the loading screen

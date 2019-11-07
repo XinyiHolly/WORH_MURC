@@ -2,8 +2,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <!-- meta tags for SEO -->
+    <meta name="description" content="Wisconsin Office of Rural Health provides rural health news, resources. Our mission is to improve access to and quality of rural health care in Wisconsin.">
+    <meta name="keywords" content="Wisconsin, office, rural, health, news, resources, murc">
+
 	<meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
     <link rel="stylesheet" href="lib/css/jquery-ui2.css">   
     <link rel="stylesheet" href="lib/css/bootstrap.css">
     <link rel="stylesheet" href="lib/leaflet/leaflet.css">
@@ -31,16 +36,18 @@
         <div class="container-fluid">
 
             <!-- Add top navbar from bootstrap -->
-            <nav id="navbar" class="navbar navbar-expand justify-content-between navbar-dark bg-primary fixed-top">
-                <!-- Add brand as a link (also possible to add as a heading) -->
-                <a class="navbar-brand" href="#">
-                    <img src="images/logoTransparent2016.png" width="30" height="30" alt="">
-                    WI ORH
-                </a>
+            <nav id="navbar" class="navbar navbar-expand-sm justify-content-between navbar-dark bg-primary fixed-top">
                 <!-- Add button that appears to expand menu when screen size is small -->
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+                <!-- Add brand as a link (also possible to add as a heading) -->
+                <a class="navbar-brand the-actual-brand" href="http://www.worh.org/" target="_blank">
+                    <img id="logo" src="images/WI_ORH_Logo_Outline.png" width="auto" height="40" alt="">
+                </a>
+                <div class="navbar-brand navbar-brand-title">
+                    Municipal Urban-Rural Classification
+                </div>
                 <!-- Add in nav toggles -->
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                     <!-- Justify content to the right -->
@@ -76,15 +83,17 @@
                         <div id="address-container">
                             <h3 id=addressInputText>Enter an Address</h3>
                             <!-- Adress input form-->
-                            <div id="addressInput-div" class="input-group mb-3">
+                            <form id="addressInput-form" class="input-group mb-3">
                                 <!--<label for="addressInput">Enter an address</label>-->
-                                <input type="text" class="form-control" id="addressInput" placeholder="e.g. 121 S Washington Blvd Milwaukee WI">
-                                <div class="input-group-append">
-                                    <button id="addressSubmit" class="btn btn-primary" type="submit">
-                                        <img src="images/search-icon-white.png" width="20" height="auto">
-                                    </button>
-                                </div>
-                            </div>
+                                <!-- <form id="addressForm"> -->
+                                    <input type="text" class="form-control" id="addressInput" placeholder="e.g. 121 S Washington Blvd Milwaukee WI">
+                                    <div class="input-group-append">
+                                        <button id="addressSubmit" class="btn btn-primary" type="submit">
+                                            <img src="images/search-icon-white.png" width="20" height="auto">
+                                        </button>
+                                    </div>
+                                <!-- </form> -->
+                            </form>
                         </div>
 
                         <div id="dragAndDrop-container">
@@ -137,7 +146,7 @@
                     <div id=results-content>
                         <h3 id="success">Success!</h3>
                         <h5 id="numGeoCoded"></h5>
-                        <div id="resultsOverview">No Summary Available</div>
+                        <div id="resultsOverview"></div>
                         <div id="tableMapToggle" class="btn-group btn-group-toggle btn-block" data-toggle="buttons">
                             <label id="tableButtLabel" class="btn btn-primary active">
                                 <input type="radio" name="options" id="tableButt" autocomplete="off" checked>Table
@@ -165,7 +174,7 @@
                 </div>
             </div>
 
-            <button type="button" id="collapseButton-mobile" class="btn btn-primary" data-toggle="collapse" data-target="#mobile-content-container"><i class="fas fa-bars"></i></button>
+            <button type="button" id="collapseButton-mobile" class="btn btn-primary" data-toggle="collapse" data-target="#mobile-content-container"><i class="fas fa-search"></i></button>
 
             <!-- Content for mobile viewing (only supports address lookup) -->
             <div id="mobile-content-container" class="collapse">
@@ -179,7 +188,7 @@
                     <div id="address-container-mobile">
                             <h3 id=addressInputText-mobile>Enter an Address</h3>
                             <!-- Adress input form-->
-                            <div id="addressInput-div-mobile" class="input-group mb-3">
+                            <form id="addressInput-form-mobile" class="input-group mb-3">
                                 <!--<label for="addressInput">Enter an address</label>-->
                                 <input type="text" class="form-control" id="addressInput-mobile" placeholder="e.g. 445 W Johnson St 53703">
                                 <div class="input-group-append">
@@ -187,7 +196,7 @@
                                         <img src="images/search-icon-white.png" width="20" height="auto">
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
 
                         <div id="murcButton-container-single-mobile">
@@ -217,6 +226,8 @@
         <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
 	    <!-- <script src="https://code.jquery.com/ui/1.9.2/jquery-ui.js"></script> -->
         <script src="lib/js/jquery-ui.min.js"></script>
+        <!-- For draggable touch screen support -->
+        <script src="lib/js/jquery.ui.touch-punch.min.js"></script>
         <script src="lib/js/popper.min.js"></script>
         <script src="lib/js/bootstrap.js"></script>
         <script src="lib/leaflet/leaflet.js"></script>
@@ -235,7 +246,6 @@
 
         <!-- <script data-require="angular.js@1.1.x" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.1.5/angular.js" data-semver="1.1.5"></script> -->
         <script type="text/javascript" src="main.js"></script>
-        <!-- <script type="text/javascript" src="draganddrop.js"></script> -->
 
     </body>
 </html>
